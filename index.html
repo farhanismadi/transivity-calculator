@@ -116,9 +116,9 @@
               const b = matrix[k][j];
               const result = a * b;
 
-              text += `  (${i + 1},${k + 1} x ${k + 1},${
+              text += `${i + 1},${j + 1} | ${i + 1},${k + 1} x ${k + 1},${
                 j + 1
-              }) = ${a} x ${b} = ${result}\n`;
+              } | ${a} x ${b} = ${result}\n`;
               if (result === 1) hasRelation = true;
             }
 
