@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Transitivity Calculation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-blue-300 p-6">
+    <div class="mx-auto p-4 bg-white rounded-lg shadow-md">
+      <h1 class="text-2xl font-bold mb-4">Transitivity Calculation</h1>
+
+      <!-- Input for Matrix -->
+      <div>
+        <label
+          for="matrixInput"
+          class="block text-sm font-medium text-gray-700"
+        >
+          Masukkan Matriks (baris per baris, pisahkan dengan spasi):
+        </label>
+        <textarea
+          id="matrixInput"
+          rows="10"
+          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          placeholder="Masukkan matriks sebagai angka 1 atau 0, misalnya: 1 0 1"
+        ></textarea>
+      </div>
+
+      <!-- Button -->
+      <button
+        id="calculateButton"
+        class="mt-4 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+      >
+        Hitung Transitivity
+      </button>
+
+      <!-- Initial Matrix -->
+      <div id="initialMatrixContainer" class="mt-6 hidden">
+        <h2 class="text-xl font-bold mb-4">Matriks Awal</h2>
+        <table
+          id="initialMatrixTable"
+          class="min-w-full table-auto border-collapse border border-gray-300"
+        >
+          <thead>
+            <tr>
+              <th class="border border-gray-300 p-2">i/j</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <!-- Result Matrix -->
+      <div id="tableContainer" class="mt-6 hidden">
+        <h2 class="text-xl font-bold mb-4">Matriks Hasil Transitivity</h2>
+        <table
+          id="resultTable"
+          class="min-w-full table-auto border-collapse border border-gray-300"
+        >
+          <thead>
+            <tr>
+              <th class="border border-gray-300 p-2">i/j</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <!-- Error Message -->
+      <p id="errorMessage" class="mt-4 text-red-500"></p>
+
+      <!-- Process Details -->
+      <div id="processContainer" class="mt-4 hidden">
+        <h2 class="text-xl font-bold mb-4">Proses Perhitungan Transitivity</h2>
+        <pre id="processText" class="text-sm bg-gray-100 p-4 rounded-md"></pre>
+      </div>
+    </div>
+
+    <script>
+      function calculateTransitivity(matrix) {
+        const n = matrix.length;
+        const result = JSON.parse(JSON.stringify(matrix));
+
+        for (let k = 0; k < n; k++) {
+          for (let i = 0; i < n; i++) {
+            for (let j = 0; j < n; j++) {
+              if (
+                result[i][j] === 0 &&
+                result[i][k] === 1 &&
+                result[k][j] === 1
+              ) {
+                result[i][j] = 1;
+              }
+            }
+          }
+        }
+
+        return result;
+      }
+
+      function displayTransitivityProcess(matrix) {
+        const n = matrix.length;
+        let text = "";
+
+        for (let i = 0; i < n; i++) {
+          text += `Risiko ${i + 1}:\n`;
+          for (let j = 0; j < n; j++) {
+            if (matrix[i][j] === 1) continue;
+
+            text += ` ${i + 1},${j + 1} dihitung dari:\n`;
+            let hasRelation = false;
+
+            for (let k = 0; k < n; k++) {
+              if (k === i || k === j) continue;
+              const a = matrix[i][k];
+              const b = matrix[k][j];
+              const result = a * b;
+
+              text += `  (${i + 1},${k + 1} x ${k + 1},${
+                j + 1
+              }) = ${a} x ${b} = ${result}\n`;
+              if (result === 1) hasRelation = true;
+            }
+
+            text += `  => Hasil akhir untuk posisi (${i + 1},${j + 1}): ${
+              hasRelation ? 1 : 0
+            }\n\n`;
+          }
+          text += "\n";
+        }
+
+        return text;
+      }
+
+      document
+        .getElementById("calculateButton")
+        .addEventListener("click", function () {
+          const input = document.getElementById("matrixInput").value.trim();
+          if (!input) {
+            document.getElementById("errorMessage").textContent =
+              "Matriks tidak boleh kosong!";
+            return;
+          }
+
+          const rows = input.split("\n");
+          const matrix = rows.map((row) =>
+            row
+              .trim()
+              .split(/\s+/)
+              .map((num) => parseInt(num))
+          );
+
+          const n = matrix.length;
+          if (!matrix.every((row) => row.length === n)) {
+            document.getElementById("errorMessage").textContent =
+              "Matriks harus persegi (baris = kolom)";
+            return;
+          }
+
+          // Clear previous errors
+          document.getElementById("errorMessage").textContent = "";
+
+          // === Tampilkan Matriks Awal ===
+          const initBody = document.querySelector("#initialMatrixTable tbody");
+          const initHeader = document.querySelector(
+            "#initialMatrixTable thead tr"
+          );
+          initBody.innerHTML = "";
+          initHeader.innerHTML =
+            "<th class='border border-gray-300 p-2'>i/j</th>";
+
+          for (let i = 0; i < n; i++) {
+            const head = document.createElement("th");
+            head.className = "border border-gray-300 p-2";
+            head.textContent = `R${i + 1}`;
+            initHeader.appendChild(head);
+          }
+
+          for (let i = 0; i < n; i++) {
+            const row = document.createElement("tr");
+            const label = document.createElement("td");
+            label.className = "border border-gray-300 p-2";
+            label.textContent = `R${i + 1}`;
+            row.appendChild(label);
+
+            for (let j = 0; j < n; j++) {
+              const cell = document.createElement("td");
+              cell.className = "border border-gray-300 p-2";
+              cell.textContent = matrix[i][j];
+              row.appendChild(cell);
+            }
+
+            initBody.appendChild(row);
+          }
+
+          document
+            .getElementById("initialMatrixContainer")
+            .classList.remove("hidden");
+
+          // === Hitung Transitivity ===
+          const transitiveMatrix = calculateTransitivity(matrix);
+
+          // === Tampilkan Matriks Hasil ===
+          const resultBody = document.querySelector("#resultTable tbody");
+          const resultHeader = document.querySelector("#resultTable thead tr");
+          resultBody.innerHTML = "";
+          resultHeader.innerHTML =
+            "<th class='border border-gray-300 p-2'>i/j</th>";
+
+          for (let i = 0; i < n; i++) {
+            const head = document.createElement("th");
+            head.className = "border border-gray-300 p-2";
+            head.textContent = `R${i + 1}`;
+            resultHeader.appendChild(head);
+          }
+
+          for (let i = 0; i < n; i++) {
+            const row = document.createElement("tr");
+            const label = document.createElement("td");
+            label.className = "border border-gray-300 p-2";
+            label.textContent = `R${i + 1}`;
+            row.appendChild(label);
+
+            for (let j = 0; j < n; j++) {
+              const cell = document.createElement("td");
+              cell.className = "border border-gray-300 p-2";
+              const original = matrix[i][j];
+              const updated = transitiveMatrix[i][j];
+
+              cell.textContent =
+                original === 0 && updated === 1 ? "1*" : updated;
+              row.appendChild(cell);
+            }
+
+            resultBody.appendChild(row);
+          }
+
+          document.getElementById("tableContainer").classList.remove("hidden");
+
+          // === Proses Perhitungan ===
+          const process = displayTransitivityProcess(matrix);
+          document.getElementById("processText").textContent = process;
+          document
+            .getElementById("processContainer")
+            .classList.remove("hidden");
+        });
+    </script>
+  </body>
+</html>
